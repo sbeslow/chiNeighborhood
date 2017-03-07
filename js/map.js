@@ -50,7 +50,7 @@ function onLocationFound(e) {
     L.marker(e.latlng, {
       icon: L.divIcon({
         className: 'label',
-        html: '<i style="color: red;font-size:300%;">You are in: ' + neighborhoodName + '</i>',
+        html: '<i style="color: red;font-size:110%;">You are in: ' + neighborhoodName + '</i>',
         iconSize: [50, 100]
       })
     }).addTo(mymap);
