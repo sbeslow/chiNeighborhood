@@ -8,64 +8,74 @@ L.tileLayer('https://api.mapbox.com/styles/v1/scottbeslow/ciy1z57zk00622sp6ymogn
 function onEachFeature(feature, layer) {
 
     L.marker(layer.getBounds().getCenter(), {
-      icon: L.divIcon({
-        className: 'label',
-        html: '<i style="color: red;">' + feature.properties.community + '</i>',
-        iconSize: [100, 40]
-      })
+        icon: L.divIcon({
+            className: 'label',
+            html: '<i style="color: red;">' + feature.properties.community + '</i>',
+            iconSize: [100, 40]
+        })
     }).addTo(mymap);
 }
 
-var geoJsonLayer = {}
+var geoJsonLayer = null;
+var currentLatLng = null;
+
 function drawBoundaries(chiBoundariesJson) {
     var features = chiBoundariesJson["features"];
 
     geoJsonLayer = L.geoJSON(chiBoundariesJson, {
         onEachFeature: onEachFeature
     }).addTo(mymap);
-    
+
 }
 
 $.getJSON("chiBoundaries.geojson", function (chiBoundariesJson) {
     drawBoundaries(chiBoundariesJson);
+    whatNeighborhoodAmIIn();
 });
 
 // Zoom to current location
-mymap.locate({setView: true, maxZoom: 16});
+mymap.locate({
+    setView: true,
+    maxZoom: 16
+});
 
 function onLocationFound(e) {
-    
-    var neighborhoodName = whatNeighborhoodAmIIn(e);
 
     //L.marker(e.latlng).addTo(mymap)
     //    .bindPopup("You are within " + radius + " meters from this point").openPopup();
     var radius = e.accuracy / 2;
     L.circle(e.latlng, radius).addTo(mymap);
+    currentLatLng = e.latlng;
 
-    L.marker(e.latlng, {
-      icon: L.divIcon({
-        className: 'label',
-        html: '<i style="color: red;font-size:110%;">You are in: ' + neighborhoodName + '</i>',
-        iconSize: [50, 100]
-      })
-    }).addTo(mymap);
+    whatNeighborhoodAmIIn();
 }
 
 mymap.on('locationfound', onLocationFound);
 
 function toTitleCase(str) {
     str = str.toLowerCase();
-    return str.replace(/(?:^|\s)\w/g, function(match) {
+    return str.replace(/(?:^|\s)\w/g, function (match) {
         return match.toUpperCase();
     });
 }
 
-function whatNeighborhoodAmIIn(e){
-    var results = leafletPip.pointInLayer(e.latlng, geoJsonLayer);
+function whatNeighborhoodAmIIn(e) {
+    if (!currentLatLng || !geoJsonLayer) {
+        return;
+    }
+    var results = leafletPip.pointInLayer(currentLatLng, geoJsonLayer);
     if (results.length == 0) {
         alert("Sorry, can't find you.  Are you even in Chicago?");
     }
     var name = toTitleCase(results[0]['feature']['properties']['community']);
     $("#neighborhoodName").html("You are in " + name);
-    return name;
+
+    L.marker(currentLatLng, {
+        icon: L.divIcon({
+            className: 'label',
+            html: '<i style="color: red;font-size:110%;">You are in: ' + name + '</i>',
+            iconSize: [50, 100]
+        })
+    }).addTo(mymap);
+
 }
