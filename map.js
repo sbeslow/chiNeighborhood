@@ -19,38 +19,28 @@ function onEachFeature(feature, layer) {
 var geoJsonLayer = null;
 var currentLatLng = null;
 
-function drawBoundaries(chiBoundariesJson) {
-    var features = chiBoundariesJson["features"];
+$.getJSON("chiBoundaries.geojson", function (chiBoundariesJson) {
 
     geoJsonLayer = L.geoJSON(chiBoundariesJson, {
         onEachFeature: onEachFeature
     }).addTo(mymap);
 
-}
-
-$.getJSON("chiBoundaries.geojson", function (chiBoundariesJson) {
-    drawBoundaries(chiBoundariesJson);
     whatNeighborhoodAmIIn();
 });
 
 // Zoom to current location
 mymap.locate({
-    setView: true,
-    maxZoom: 16
-});
+        setView: true,
+        maxZoom: 13
+    })
+    .on('locationfound', function (e) {
+        var radius = e.accuracy * 3;
+        L.circle(e.latlng, radius).addTo(mymap);
+        currentLatLng = e.latlng;
 
-function onLocationFound(e) {
+        whatNeighborhoodAmIIn();
+    })
 
-    //L.marker(e.latlng).addTo(mymap)
-    //    .bindPopup("You are within " + radius + " meters from this point").openPopup();
-    var radius = e.accuracy / 2;
-    L.circle(e.latlng, radius).addTo(mymap);
-    currentLatLng = e.latlng;
-
-    whatNeighborhoodAmIIn();
-}
-
-mymap.on('locationfound', onLocationFound);
 
 function toTitleCase(str) {
     str = str.toLowerCase();
